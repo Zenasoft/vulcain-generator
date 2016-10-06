@@ -8,7 +8,7 @@ var fs = require('fs');
 var os = require('os');
 var q = require('q');
 var ejs = require('ejs');
-var guid = require('guid');
+var uuid = require('node-uuid');
 
 module.exports = yeoman.Base.extend({
 
@@ -134,7 +134,7 @@ module.exports = yeoman.Base.extend({
           if (!fs.existsSync(this.templatePath())) {
             fs.mkdir(this.templatePath());
           }
-          var tempFilePath = this.templatePath(`${guid.raw()}.js`);
+          var tempFilePath = this.templatePath(`${uuid.v4()}.js`);
           fs.writeFileSync(tempFilePath, ctxCode);
 
           var Context = require(`${tempFilePath}`);

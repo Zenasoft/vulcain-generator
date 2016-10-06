@@ -1,6 +1,6 @@
 {
   "name": "generator-vulcain",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Yeoman generator for VULCAIN",
   "homepage": "",
   "author": {
@@ -20,7 +20,7 @@
     "chalk": "^1.0.0",
     "change-case": "^3.0.0",
     "ejs": "^2.5.2",
-    "guid": "0.0.12",
+    "node-uuid": "^1.4.7",
     "q": "^1.4.1",
     "unirest": "^0.5.1",
     "yeoman-generator": "^0.23.0",
