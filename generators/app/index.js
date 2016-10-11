@@ -99,7 +99,7 @@ module.exports = yeoman.Base.extend({
       }
 
       var prompts = [{
-        name: 'vulcainProfile', type: 'rawlist', message: 'Select a Vulcain profile', choices: choices, default: selectedIndex
+        name: 'vulcainProfile', type: 'list', message: 'Select a Vulcain profile', choices: choices, default: selectedIndex
       }];
 
       this.prompt(prompts).then(answers => {
