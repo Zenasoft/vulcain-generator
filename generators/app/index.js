@@ -21,13 +21,16 @@ module.exports = yeoman.Base.extend({
     this.answers = {};
   },
 
-
+  loadTeams: function () {
+    return this.loadVulcainData('/api/teams.getUserEnvironments');
+  },
+  
   loadTemplates: function () {
     return this.loadVulcainData('/api/template.all?kind=CodeGeneration');
   },
 
   loadServices: function () {
-    return this.loadVulcainData('/api/service.all?cluster=test&withDiscoveryAddress=true');
+    return this.loadVulcainData(`/api/service.all?team=${this.answers.vulcain.team}&withDiscoveryAddress=true`);
   },
   loadVulcainData: function (path) {
     return new Promise((resolve, reject) => {
@@ -106,7 +109,10 @@ module.exports = yeoman.Base.extend({
         this.answers.vulcain = {
           profile: answers.vulcainProfile,
           host: vulcainConfig.data[answers.vulcainProfile].server.slice(7),
-          token: vulcainConfig.data[answers.vulcainProfile].token
+          token: vulcainConfig.data[answers.vulcainProfile].token,
+          // TODO select a team from (this.loadTeams) with vulcain.team selected by default (if any)
+          // the selected team replaces vulcain.team
+          team: vulcainConfig.data[answers.vulcainProfile].team          
         };
         done();
       });
