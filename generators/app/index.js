@@ -22,7 +22,7 @@ module.exports = yeoman.Base.extend({
   },
 
   loadTeams: function () {
-    return this.loadVulcainData('/api/teams.getUserEnvironments');
+    return this.loadVulcainData('/api/Service.environmentsForUser');
   },
   
   loadTemplates: function () {
@@ -92,13 +92,25 @@ module.exports = yeoman.Base.extend({
       var choices = [];
       var selectedIndex = 0;
       var currIndex = 0;
-
+      
       for (var p in vulcainConfig.data) {
         choices.push({ name: p, checked: p === vulcainConfig.defaultProfile });
         if (p === vulcainConfig.defaultProfile) {
           selectedIndex = currIndex;
         }
         currIndex++;
+      }
+
+      if (choices.length === 1) { // Only one profile 
+        let profile = choices[0];
+        this.answers.vulcain = {
+          profile: profile,
+          host: vulcainConfig.data[profile].server.slice(7),
+          token: vulcainConfig.data[profile].token,
+          team: vulcainConfig.data[profile].team
+        };
+        done();
+        return;
       }
 
       var prompts = [{
@@ -110,21 +122,57 @@ module.exports = yeoman.Base.extend({
           profile: answers.vulcainProfile,
           host: vulcainConfig.data[answers.vulcainProfile].server.slice(7),
           token: vulcainConfig.data[answers.vulcainProfile].token,
-          // TODO select a team from (this.loadTeams) with vulcain.team selected by default (if any)
-          // the selected team replaces vulcain.team
-          team: vulcainConfig.data[answers.vulcainProfile].team          
+          team: vulcainConfig.data[answers.vulcainProfile].team
         };
         done();
       });
     },
 
+    selectTeam: function () {
+      this.log('Vulcain team selector');
+
+      var done = this.async();
+
+      this.loadTeams().then(data => {
+        this.teams = data.value;
+
+        if (this.teams.length === 1) {
+          this.answers.vulcain.team = this.
+            done();
+          return;
+        }
+        
+        var choices = [];
+        var selectedIndex = 0;
+        var currIndex = 0;
+      
+        console.log("team=" + this.answers.vulcain.team);
+        for (let team of this.teams) {
+          choices.push({ name: team.name, checked: team.name === this.answers.vulcain.team });
+          if (team.name === this.answers.vulcain.team) {
+            selectedIndex = currIndex;
+          }
+          currIndex++;
+        }
+         
+        var prompts = [
+          { name: 'vulcainTeam', type: 'list', message: 'Select a team', choices: choices, default: selectedIndex }
+        ];
+
+        this.prompt(prompts).then(answers => {
+          this.answers.vulcain.team = answers.vulcainTeam;
+          done();
+        });
+      });
+    },
+    
     selectTemplate: function () {
       this.log('Vulcain template selector');
 
       var done = this.async();
 
       this.loadTemplates().then(data => {
-        this.templates = data.value;
+        this.teamplates = data.value;
 
         var prompts = [
           { name: 'serviceTemplate', type: 'list', message: 'Select a template', choices: data.value.map(t => { return { name: t.name, value: t }; }) }
@@ -191,17 +239,17 @@ module.exports = yeoman.Base.extend({
     this.log(JSON.stringify(this.answers.template.initializationData));
     this.answers.template.executingContext.init(this.answers.template.initializationData).then((outFilePath) => {
       // try {
-        var out = ejs.render(
-          self.answers.template.data.templateCode,
-          self.answers.template.executingContext
-        );
+      var out = ejs.render(
+        self.answers.template.data.templateCode,
+        self.answers.template.executingContext
+      );
 
-        self.fs.write(
-          self.destinationPath(outFilePath),
-          out
-        );
+      self.fs.write(
+        self.destinationPath(outFilePath),
+        out
+      );
 
-        done();
+      done();
     });
 
 
