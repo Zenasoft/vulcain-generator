@@ -1,14 +1,15 @@
 'use strict';
-var yeoman = require('yeoman-generator');
-var chalk = require('chalk');
-var yosay = require('yosay');
-var http = require('http');
-var path = require('path');
-var fs = require('fs');
-var os = require('os');
-var q = require('q');
-var ejs = require('ejs');
-var uuid = require('node-uuid');
+const yeoman = require('yeoman-generator');
+const chalk = require('chalk');
+const yosay = require('yosay');
+const http = require('http');
+const path = require('path');
+const fs = require('fs');
+const os = require('os');
+const q = require('q');
+const ejs = require('ejs');
+const uuid = require('node-uuid');
+const URL = require('url');
 
 module.exports = yeoman.Base.extend({
 
@@ -24,7 +25,7 @@ module.exports = yeoman.Base.extend({
   loadTeams: function () {
     return this.loadVulcainData('/api/Service.environmentsForUser');
   },
-  
+
   loadTemplates: function () {
     return this.loadVulcainData('/api/template.all?kind=CodeGeneration');
   },
@@ -46,6 +47,7 @@ module.exports = yeoman.Base.extend({
 
       var r = http.request({
         host: this.answers.vulcain.host,
+        port: this.answers.vulcain.port,
         path: path,
         protocol: 'http:',
         method: 'GET',
@@ -56,7 +58,7 @@ module.exports = yeoman.Base.extend({
         res => {
           //console.log('STATUS: ' + res.statusCode);
           if (res.statusCode !== 200) {
-            reject(res);
+            reject(`Error on ${path} : status: ${res.statusCode} ${res.body}`);
           }
           let data = '';
           res.on('data', (chunk) => data += chunk);
@@ -77,7 +79,7 @@ module.exports = yeoman.Base.extend({
 
   prompting: {
     selectVulcainProfile: function () {
-      this.log('Vulcain Profile');
+      // this.log('Vulcain Profile');
 
       var done = this.async();
 
@@ -92,7 +94,7 @@ module.exports = yeoman.Base.extend({
       var choices = [];
       var selectedIndex = 0;
       var currIndex = 0;
-      
+
       for (var p in vulcainConfig.data) {
         choices.push({ name: p, checked: p === vulcainConfig.defaultProfile });
         if (p === vulcainConfig.defaultProfile) {
@@ -103,9 +105,11 @@ module.exports = yeoman.Base.extend({
 
       if (choices.length === 1) { // Only one profile 
         let profile = choices[0];
+        let uri = URL.parse(vulcainConfig.data[profile].server);
         this.answers.vulcain = {
           profile: profile,
-          host: vulcainConfig.data[profile].server.slice(7),
+          host: uri.hostname,
+          port: uri.port || 80,
           token: vulcainConfig.data[profile].token,
           team: vulcainConfig.data[profile].team
         };
@@ -118,18 +122,20 @@ module.exports = yeoman.Base.extend({
       }];
 
       this.prompt(prompts).then(answers => {
+        let uri = URL.parse(vulcainConfig.data[answers.vulcainProfile].server);
+
         this.answers.vulcain = {
           profile: answers.vulcainProfile,
-          host: vulcainConfig.data[answers.vulcainProfile].server.slice(7),
+          host: uri.hostname,
+          port: uri.port || 80,
           token: vulcainConfig.data[answers.vulcainProfile].token,
           team: vulcainConfig.data[answers.vulcainProfile].team
         };
         done();
       });
     },
-
     selectTeam: function () {
-      this.log('Vulcain team selector');
+      //this.log('Vulcain domain selector');
 
       var done = this.async();
 
@@ -141,12 +147,12 @@ module.exports = yeoman.Base.extend({
             done();
           return;
         }
-        
+
         var choices = [];
         var selectedIndex = 0;
         var currIndex = 0;
-      
-        console.log("team=" + this.answers.vulcain.team);
+
+        //console.log("team=" + this.answers.vulcain.team);
         for (let team of this.teams) {
           choices.push({ name: team.name, checked: team.name === this.answers.vulcain.team });
           if (team.name === this.answers.vulcain.team) {
@@ -154,9 +160,9 @@ module.exports = yeoman.Base.extend({
           }
           currIndex++;
         }
-         
+
         var prompts = [
-          { name: 'vulcainTeam', type: 'list', message: 'Select a team', choices: choices, default: selectedIndex }
+          { name: 'vulcainTeam', type: 'list', message: 'Select target domain ', choices: choices, default: selectedIndex }
         ];
 
         this.prompt(prompts).then(answers => {
@@ -165,9 +171,9 @@ module.exports = yeoman.Base.extend({
         });
       });
     },
-    
+
     selectTemplate: function () {
-      this.log('Vulcain template selector');
+      // this.log('Vulcain template selector');
 
       var done = this.async();
 
@@ -236,7 +242,7 @@ module.exports = yeoman.Base.extend({
     var self = this;
     var done = this.async();
     this.log('Writing');
-    this.log(JSON.stringify(this.answers.template.initializationData));
+    // this.log(JSON.stringify(this.answers.template.initializationData));
     this.answers.template.executingContext.init(this.answers.template.initializationData).then((outFilePath) => {
       // try {
       var out = ejs.render(
