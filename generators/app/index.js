@@ -210,11 +210,15 @@ module.exports = yeoman.Base.extend({
                   p.choices = [];
                   this.loadServices().then(
                     svcs => {
-                      svcs.value.forEach(svc => {
-                        svc.versions.forEach(v => {
-                          p.choices.push({ name: `${svc.name}@${v.version}`, checked: false, value: v.discoveryAddress });
+                      if (svcs.error) {
+                        reject(svcs.error);
+                      } else {
+                        svcs.value.forEach(svc => {
+                          svc.versions.forEach(v => {
+                            p.choices.push({ name: `${svc.name}@${v.version}`, checked: false, value: v.discoveryAddress });
+                          });
                         });
-                      });
+                      }
                     },
                     err => reject(err)
                   ).then(() => resolve(p));
