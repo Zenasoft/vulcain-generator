@@ -23,7 +23,7 @@ module.exports = yeoman.Base.extend({
   },
 
   loadTeams: function () {
-    return this.loadVulcainData('/api/Service.environmentsForUser');
+    return this.loadVulcainData('/api/team.names');
   },
 
   loadTemplates: function () {
@@ -143,7 +143,7 @@ module.exports = yeoman.Base.extend({
         this.teams = data.value;
 
         if (this.teams.length === 1) {
-          this.answers.vulcain.team = this.
+          this.answers.vulcain.team = this.teams[0];
             done();
           return;
         }
@@ -154,8 +154,8 @@ module.exports = yeoman.Base.extend({
 
         //console.log("team=" + this.answers.vulcain.team);
         for (let team of this.teams) {
-          choices.push({ name: team.name, checked: team.name === this.answers.vulcain.team });
-          if (team.name === this.answers.vulcain.team) {
+          choices.push({ name: team, checked: team === this.answers.vulcain.team });
+          if (team === this.answers.vulcain.team) {
             selectedIndex = currIndex;
           }
           currIndex++;
