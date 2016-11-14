@@ -103,8 +103,8 @@ module.exports = yeoman.Base.extend({
         currIndex++;
       }
 
-      if (choices.length === 1) { // Only one profile 
-        let profile = choices[0];
+      if (choices.length === 1) { // Only one profile
+        let profile = vulcainConfig.defaultProfile;
         let uri = URL.parse(vulcainConfig.data[profile].server);
         this.answers.vulcain = {
           profile: profile,
