@@ -215,7 +215,11 @@ module.exports = yeoman.Base.extend({
                       } else {
                         svcs.value.forEach(svc => {
                           svc.versions.forEach(v => {
-                            p.choices.push({ name: `${svc.name}@${v.version}`, checked: false, value: v.discoveryAddress });
+                            p.choices.push({
+                              name: `${svc.name}@${v.version}`,
+                              checked: false,
+                              value: v.discoveryAddress
+                            });
                           });
                         });
                       }
@@ -246,12 +250,17 @@ module.exports = yeoman.Base.extend({
     var self = this;
     var done = this.async();
     this.log('Writing');
-    // this.log(JSON.stringify(this.answers.template.initializationData));
-    this.answers.template.executingContext.init(this.answers.template.initializationData).then((outFilePath) => {
-      // try {
+
+    var context = this.answers.template.executingContext;
+    context.init.call(context, this.answers.template.initializationData).then((outFilePath) => {
+      if (this.answers.template.initializationData) {
+        for (var p in this.answers.template.initializationData) {
+          context[p] = this.answers.template.initializationData[p];
+        }
+      }
       var out = ejs.render(
         self.answers.template.data.templateCode,
-        self.answers.template.executingContext
+        context
       );
 
       self.fs.write(
@@ -261,9 +270,6 @@ module.exports = yeoman.Base.extend({
 
       done();
     });
-
-
-
   },
 
   install: function () {
